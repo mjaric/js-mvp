@@ -1,10 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-      <meta charset="utf-8" />
-      <title>Testing</title>
-      <script type="text/javascript" src="javascript/jquery-1.7.js" charset="UTF-8"></script> </head> <script type="text/javascript" src="javascript/codex/core.js" charset="UTF-8"></script> </head>
-  <body>
-  
-  </body>
+<head>
+    <meta charset="utf-8"/>
+    <title>Testing</title>
+    <script type="text/javascript" src="javascript/jquery-1.7.js" charset="UTF-8"></script>
+    <script type="text/javascript" src="javascript/codex/core.js" charset="UTF-8"></script>
+    <script type="text/javascript" src="javascript/codex/codex.proxy.js" charset="UTF-8"></script>
+    <script type="text/javascript">
+        
+        $(function(){
+            var data = {
+                person: {
+                    full_name: "Milan Jaric",
+                    email: "m.jaric@yahoo.com"
+                }
+            }
+
+            var p = new Proxy(data);
+
+            //codex.dataSources["personDataSource"] = p;
+
+            //codex.dataBind();
+
+
+        });
+    </script>
+</head>
+<body>
+ <div id="personView" data-source="personDataSource">
+     <div class="field">
+         <label for="person_full_name">Full Name</label>
+         <input id="person_full_name" name="person[full_name]" type="text" />
+     </div>
+     <div class="field">
+         <label>Email Address</label>
+         <input id="person_email" name="person[email]" type="text" />
+     </div>
+ </div>
+</body>
 </html>

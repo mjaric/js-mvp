@@ -63,8 +63,7 @@ var Proxy = function(rootObj, path) {
 
             // it is object (sub json)
             this.__defineGetter__(propertyName, (function(path) {
-                var currentPath = path;
-                var proxy = new Proxy(_root, currentPath);
+                var proxy = new Proxy(_root, path);
                 // notify when property is changing
                 proxy.onChanged(__changed__);
                 proxy.onChanging(__changing__);
@@ -88,12 +87,3 @@ var Proxy = function(rootObj, path) {
     }
 
 };
-
-var ArrayProxy = function (rootObj, path) {
-    var _fakeArray = {};
-    for (var idx in obj) {
-        _fakeArray.__defineGetter__(idx.toString(), function() {
-
-        })
-    }
-}
