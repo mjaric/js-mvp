@@ -66,7 +66,7 @@ var HashArray = function(data) {
         return instance;
     }
 
-    this.append = this.pop;
+    this.append = this.push;
     this.prepend = function(){
 
     }

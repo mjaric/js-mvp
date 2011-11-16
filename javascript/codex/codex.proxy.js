@@ -14,7 +14,10 @@
 var Proxy = function(rootObj, path) {
     var _beforeCallbacks = $.Callbacks("stopOnFalse");
     var _afterCallbacks = $.Callbacks("stopOnFalse");
-    var _path = (path || "").split(".");
+    var _path = path
+    if (!$.isArray(_path)) {
+        _path = _path ? _path.split(".") : [];
+    }
     var _root = rootObj || {};
 
     //for closure purpose
@@ -22,14 +25,20 @@ var Proxy = function(rootObj, path) {
 
     function _getReference(obj, path) {
         var root = obj;
-        var ref = null;
+        var ref = root;
         var accessPath = path;
         if (typeof path === 'string') {
             accessPath = path.split(".");
         }
-        var evalScript = "ref = root" + "['";
-        evalScript += accessPath.join("'].['");
-        evalScript += "'];";
+
+        if (accessPath.length > 0) {
+            var evalScript = "ref = root";
+            evalScript += "['";
+            evalScript += accessPath.join("']['");
+            evalScript += "'];";
+            eval(evalScript);
+        }
+
         return ref;
     }
 
@@ -41,10 +50,12 @@ var Proxy = function(rootObj, path) {
         _afterCallbacks.fire(e);
     }
 
-    for (var propertyName in rootObj) {
+    for (var propertyName in _getReference(_root, _path)) {
         // this will handle array to but keep iin mind that path will be property.1...
         // index will be appended at the current iteration level
-        var currentReference = _getReference(_root, _path.push(propertyName));
+        _path.push(propertyName);
+        console.log(propertyName, _path);
+        var currentReference = _getReference(_root, _path.join("."));
 
 
         if ($.isArray(currentReference)) {
@@ -52,38 +63,50 @@ var Proxy = function(rootObj, path) {
 
         } else if (typeof currentReference in {'string':1, 'number':1, 'boolean':1}) {
 
-            this.__defineGetter__(propertyName, function() {
-
-            });
-            this.__defineSetter__(propertyName, function() {
-
-            });
+            this.__defineGetter__(propertyName, (function(pathInRoot, property) {
+                var path = pathInRoot.join(".");
+                return function() {
+                    return _getReference(_root, path);
+                }
+            })(_path, propertyName));
+            this.__defineSetter__(propertyName, (function(pathInRoot, property) {
+                var path = pathInRoot.join(".");
+                return function(value) {
+                    var ref = _getReference(_root, path);
+                    ref = value;
+                }
+            })(_path, propertyName));
 
         } else {
 
             // it is object (sub json)
-            this.__defineGetter__(propertyName, (function(path) {
+            this.__defineGetter__(propertyName, (function(pathInRoot) {
+                var path = pathInRoot.join(".");
                 var proxy = new Proxy(_root, path);
                 // notify when property is changing
                 proxy.onChanged(__changed__);
                 proxy.onChanging(__changing__);
+                console.log(path, " successfully bound");
                 return  function() {
                     return proxy;
+
                 }
             })(_path));
             // Todo: Check if there is case when we want to bind different property
         }
+        _path.pop(); // remove last (go back to parent)
 
     }
 
     this.onChanging = function(callback) {
         _beforeCallbacks.add(callback);
         return this;
-    }
+    };
 
     this.onChanged = function(callback) {
         _afterCallbacks.add(callback);
         return this;
-    }
+    };
 
 };
+
