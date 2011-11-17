@@ -12,8 +12,8 @@
         $(function() {
             var data = {
                 person: {
-                    full_name: "Milan Jaric",
-                    email: "m.jaric@yahoo.com",
+                    full_name: "Some Person Name",
+                    email: "example@domain.com",
 
                     address: {
                         street_name: "Some Address here",
@@ -25,17 +25,6 @@
 
             var p = new codex.Proxy(data);
             console.log(p.person.email);
-            //codex.dataSources["personDataSource"] = p;
-
-            //codex.dataBind();
-            /*$("#script_load").change(function(){
-             console.log($(this).val());
-             });
-
-             setInterval(function(){
-             $("#script_load").val(new Date().toDateString()).trigger("change");
-             },1500);
-             */
 
             var view = new codex.View("personEditView");
             var view = new codex.View("personView");
