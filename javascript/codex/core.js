@@ -20,11 +20,11 @@ var HashArray = function(data) {
      * @param src
      */
     this.push = function(src) {
-        if(!$.isPlainObject(src)){
+        if (!$.isPlainObject(src)) {
             var o = {};
             o[this.length.toString()] = src;
             src = o;
-        }else{
+        } else {
             _hash[name] = src;
             _array.push(src);
         }
@@ -67,7 +67,7 @@ var HashArray = function(data) {
     }
 
     this.append = this.push;
-    this.prepend = function(){
+    this.prepend = function() {
 
     }
 
@@ -103,8 +103,65 @@ var HashArray = function(data) {
 
         this.version = "0.1";
 
-        var _dataSources = {};
         this.dataSources = new function() {
+
+            function DataSource() {
+                var _data = null,
+                    _callbacks = $.Callbacks();
+
+                this.__defineGetter__("data", function() {
+                    return _data;
+                });
+
+                function preparePathForBinding(str){
+                    var openBracket = new RegExp("\\[","g");
+                    var closedBracket = new RegExp("\\]","g");
+                    return str.replace(openBracket, "['").replace(closedBracket, "']");
+                }
+
+                this.getValueOf = function(str) {
+                    // example person[email]
+                    var path = preparePathForBinding(str);
+                    var ref = null;
+                    var evalScript = " ref = _data." + path;
+                    eval(evalScript);
+                    return ref;
+                };
+
+                this.setValueOf = function(str, value){
+                    //Todo: Add support for non existing properties, build them on the fly!!!!
+                    var path = preparePathForBinding(str);
+                    var evalScript = "_data.";
+
+                    if($.isNumeric(value))
+                    {
+                        evalScript += path + " = " + value;
+                    }else if(typeof value == 'string'){
+                        // Date type should be treated in property setter
+                        // Boolean type should be treated in property setter
+                        // Array values should be wrapped in ArrayHash and use above to handle types
+                        // other than numeric or string
+                        evalScript += path + " = '"+ value+"'";
+                    }
+                    eval(evalScript);
+
+                };
+
+                this.__defineSetter__("data", function(value) {
+                    _data = value;
+                    _data.onChanged(_callbacks);
+                    _callbacks.fire();
+                });
+
+                this.__defineGetter__("callbacks", function() {
+                    return _callbacks;
+                });
+
+                this.release = function() {
+                    _data = null;
+                    _callbacks.empty();
+                };
+            }
 
             var _dataSources = {};
 
@@ -112,44 +169,43 @@ var HashArray = function(data) {
                 return _dataSources.keys().length;
             });
 
-            this.push = function(name, src) {
-                _dataSources[name] = src;
-            };
-            /**
-             *
-             */
-            this.shift = function() {
-                if (this.length < 1) {
-                    return null;
-                }
-                var key = "";
-                var instance = null;
-                for (key in _dataSources) {
-                    instance = _dataSources[key];
-                    delete _dataSources[key];
-                    return instance;
-                }
-                return instance;
+            this.subscribeTo = function(name, fn) {
+                _dataSources[name] = _dataSources[name] || new DataSource();
+                _dataSources[name].callbacks.add(fn);
+                
+                return this;
             };
 
+            this.add = function(name, data) {
 
-            this.pop = function() {
-                if (this.length < 1) {
-                    return null;
+                if ($.isPlainObject(name)) {
+                    [data,name] = [name.data, name.name];
                 }
-                var key = "";
-                var instance = null;
-                for (key in _dataSources) {
-                    instance = _dataSources[key];
+                _dataSources[name] = _dataSources[name] || {};
 
+                if ($.isPlainObject(data)) {
+                    // it is json
+                    _dataSources[name].data = new codex.Proxy(data);
+                } else {
+                    // it is codex.Proxy
+                    _dataSources[name].data = data;
                 }
-                if (key != "") {
+                return this;
+            };
 
-                    delete _dataSources[key];
+            this.remove = function(name) {
+                if (typeof _dataSources[name] === 'undefined') {
+                    return this;
                 }
-                return instance;
-            }
 
+                _dataSources[name].release();
+                _dataSources[name] = null;
+            };
+
+            this.getDataSource = function(name){
+                _dataSources[name] = _dataSources[name] || new DataSource();
+                return _dataSources[name];
+            };
 
         }();
 
