@@ -59,17 +59,17 @@ var HashArray = function(data) {
             instance = _hash[key];
 
         }
-        if (key != "") {
+        if (key !== "") {
 
             delete _hash[key];
         }
         return instance;
-    }
+    };
 
     this.append = this.push;
     this.prepend = function() {
 
-    }
+    };
 
 };
 
